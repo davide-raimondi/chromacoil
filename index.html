@@ -187,6 +187,30 @@
         .btn-settings:active, .btn-secondary:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.25); }
         .btn-danger { background: linear-gradient(90deg, #ff0844, #ff4b2b); color: #ffffff !important; box-shadow: 0 0 18px rgba(255, 8, 68, 0.4); border: none;}
 
+        /* INGRANDIMENTO MIRATO SOLO PER I TESTI DELLA PRIMA PAGINA (#mainMenu) */
+        #mainMenu h1 {
+            font-size: clamp(24px, 7.2vw, 40px);
+            margin-bottom: 10px;
+        }
+        #mainMenu p {
+            font-size: clamp(15.5px, 4.4vw, 20px);
+            margin-bottom: 16px;
+        }
+        #mainMenu #playerNameInput {
+            font-size: 15px;
+            padding: 9px 14px;
+        }
+        #mainMenu .stat-label {
+            font-size: 12px;
+        }
+        #mainMenu .stat-val {
+            font-size: 18px;
+        }
+        #mainMenu .btn {
+            font-size: clamp(13.5px, 3.9vw, 16px);
+            padding: 13px 22px;
+        }
+
         #settingsMenu .panel {
             background: rgba(12, 14, 24, 0.96); padding: 20px 14px; border-radius: 18px;
             border: 1px solid rgba(0, 242, 254, 0.45); width: min(300px, 90vw);
@@ -507,7 +531,7 @@
         let isGameOver = false, isPlaying = false, isPaused = false;
         let matchKills = 0, currentRankIndex = 0;
         let multiKillCount = 0, lastKillTime = 0, bannerTimeout = null;
-        let timeScale = 1.0; // Gestisce l'effetto Slow-Motion Bullet Time!
+        let timeScale = 1.0;
 
         let camX = 0, camY = 0, camZoom = 1;
 
@@ -1020,7 +1044,7 @@
                     spawnMine(player.segments[0].x, player.segments[0].y);
 
                     if (s.timers.shield > 0) {
-                        s.timers.shield = 0; // Lo scudo assorbe l'esplosione
+                        s.timers.shield = 0;
                         break;
                     }
 
@@ -1030,7 +1054,7 @@
                         if (idx > -1) { bots.splice(idx, 1); spawnBotNearCenter(player.segments[0].x, player.segments[0].y, false); }
                     } else if (isPlaying) {
                         vibrate([50, 30, 50]); screenShake = 22;
-                        s.score = Math.floor(s.score * 0.7); // Perdi il 30% dei punti
+                        s.score = Math.floor(s.score * 0.7);
                         for (let k = 0; k < 6 && s.segments.length > 14; k++) {
                             let tail = s.segments.pop();
                             foods.push({ x: tail.x, y: tail.y, radius: 12, color: '#ff0844', value: 20, pulsePhase: 0 });
@@ -1089,7 +1113,6 @@
         function processCombatAndMap() {
             let centerRef = player.segments[0];
             
-            // Ripristina gradualmente il tempo normale dopo il Bullet Time
             timeScale += (1.0 - timeScale) * 0.08;
 
             let bossExists = bots.some(b => b.isBoss);
@@ -1165,7 +1188,7 @@
                             lastKillTime = now;
 
                             if (snakeA.isBoss) {
-                                timeScale = 0.3; // Bullet Time Slow-Mo!
+                                timeScale = 0.3;
                                 player.score += 500;
                                 showBanner(i18n[currentLang].bossDefeated, "#ffeb3b");
                             } else {
@@ -1265,7 +1288,6 @@
             let viewW = width / camZoom, viewH = height / camZoom;
             let left = camX - viewW / 2, top = camY - viewH / 2;
 
-            // Trova il Leader dell'arena (Punteggio più alto) per disegnargli la corona
             let leaderSnake = player;
             bots.forEach(b => { if (b.score > leaderSnake.score) leaderSnake = b; });
 
@@ -1382,7 +1404,6 @@
                 ctx.globalAlpha = Math.max(0, ft.life);
                 ctx.font = `900 ${ft.size}px 'Orbitron', sans-serif`;
                 ctx.fillStyle = ft.color; ctx.textAlign = "center";
-                // Impedisce alla scritta di finire tagliata fuori dai bordi laterali o superiori!
                 let safeX = Math.max(left + 85, Math.min(left + viewW - 85, ft.x));
                 let safeY = Math.max(top + 50, Math.min(top + viewH - 50, ft.y));
                 ctx.fillText(ft.text, safeX, safeY);
