@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ChromaCoil 2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           CSS: ESTETICA CYBERPUNK & NEON 2.0
+           ========================================= */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background-color: #050508;
+            font-family: 'Rajdhani', sans-serif;
+            touch-action: none; user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #gameCanvas {
+            display: block; width: 100%; height: 100%;
+        }
+
+        /* HUD: Punteggio */
+        #scoreUI {
+            position: absolute; top: 20px; left: 20px;
+            color: #fff; font-size: 24px; font-weight: bold;
+            background: rgba(10, 10, 20, 0.65); padding: 10px 22px;
+            border-radius: 12px; border: 1px solid rgba(0, 242, 254, 0.25);
+            pointer-events: none; z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        /* HUD: Pulsante Pausa */
+        #pauseBtnUI {
+            position: absolute; top: 20px; right: 20px; z-index: 10;
+            background: rgba(10, 10, 20, 0.65); border: 1px solid rgba(0, 242, 254, 0.25);
+            color: #fff; padding: 8px 18px; border-radius: 12px;
+            font-family: 'Orbitron', sans-serif; font-size: 20px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.15);
+            transition: transform 0.15s ease;
+        }
+        #pauseBtnUI:active { transform: scale(0.9); }
+
+        /* HUD: Pulsante Turbo (Boost) in basso a sinistra */
+        #boostBtnUI {
+            position: absolute; bottom: 30px; left: 30px; z-index: 15;
+            width: 85px; height: 85px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.25) 0%, rgba(10, 10, 25, 0.7) 100%);
+            border: 2px solid rgba(0, 242, 254, 0.6);
+            color: #fff; font-size: 32px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+            cursor: pointer; backdrop-filter: blur(4px);
+            transition: transform 0.1s, box-shadow 0.1s, border-color 0.1s;
+        }
+        #boostBtnUI.boosting {
+            transform: scale(0.92);
+            border-color: #ff0844;
+            box-shadow: 0 0 30px rgba(255, 8, 68, 0.8);
+            background: radial-gradient(circle, rgba(255, 8, 68, 0.4) 0%, rgba(20, 5, 10, 0.8) 100%);
+        }
+
+        /* Menu Overlay Glassmorphism */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 12, 0.82);
+            backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 30; text-align: center;
+            transition: opacity 0.3s ease;
+        }
+        .hidden { display: none !important; }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif; 
+            font-size: clamp(32px, 11vw, 55px); 
+            margin: 0 0 10px 0;
+            background: linear-gradient(90deg, #00f2fe, #4facfe, #00f2fe);
+            background-size: 200% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+            letter-spacing: 4px;
+        }
+        
+        .game-over-title {
+            background: linear-gradient(90deg, #ff0844, #ffb199) !important;
+            -webkit-background-clip: text !important;
+        }
+
+        p { font-size: 20px; color: #b2bec3; margin: 0 0 20px 0; max-width: 85%; }
+        .score-highlight { color: #00f2fe; font-family: 'Orbitron', sans-serif; font-size: 28px; }
+        .highscore-text { font-family: 'Orbitron', sans-serif; color: #ffb199; font-size: 16px; margin-bottom: 20px; letter-spacing: 1px; }
+
+        /* Selettore Skin Colore */
+        .skin-selector {
+            display: flex; gap: 14px; margin-bottom: 25px; align-items: center;
+        }
+        .skin-swatch {
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .skin-swatch.active {
+            transform: scale(1.2);
+            border-color: #ffffff;
+        }
+
+        /* Pulsanti Futuristici */
+        .btn {
+            font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700;
+            color: #ffffff;
+            padding: 15px 40px; margin: 8px; border-radius: 8px;
+            cursor: pointer; min-width: 280px; border: 2px solid transparent;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-play { background: #00f2fe; color: #000000 !important; box-shadow: 0 0 20px rgba(0, 242, 254, 0.5); }
+        .btn-play:active { transform: scale(0.95); box-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+        
+        .btn-settings, .btn-secondary { 
+            background: rgba(255, 255, 255, 0.15); 
+            border-color: rgba(255,255,255,0.4); 
+            color: #ffffff !important; 
+        }
+        .btn-settings:active, .btn-secondary:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.25); }
+        .btn-danger { background: #ff0844; color: #ffffff !important; box-shadow: 0 0 20px rgba(255, 8, 68, 0.4); border: none;}
+
+        /* Pannello Impostazioni */
+        #settingsMenu .panel {
+            background: rgba(15, 15, 25, 0.95); padding: 35px; border-radius: 20px;
+            border: 1px solid rgba(0, 242, 254, 0.5); max-width: 90%;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.15);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HUD Punteggio in gioco -->
+    <div id="scoreUI" class="hidden">
+        <span id="txt_scoreLabel">Punti:</span> <span id="scoreValue">0</span>
+    </div>
+
+    <!-- Tasto Pausa in alto a destra -->
+    <button id="pauseBtnUI" class="hidden">⏸️</button>
+
+    <!-- Tasto Turbo in basso a sinistra -->
+    <div id="boostBtnUI" class="hidden">⚡</div>
+
+    <!-- Menu Principale -->
+    <div id="mainMenu" class="overlay">
+        <h1>CHROMACOIL</h1>
+        <p id="txt_subtitle">Inietta il codice. Divora i dati. Diventa l'anomalia perfetta.</p>
+        
+        <p class="highscore-text">
+            <span id="txt_menuBestScore">Miglior Punteggio:</span> <span id="menuBestScoreValue" style="color: #fff;">0</span>
+        </p>
+
+        <!-- Selettore Skin -->
+        <p id="txt_skinLabel" style="font-size: 16px; margin-bottom: 10px; color: #00f2fe; font-family: 'Orbitron';">SCEGLI SKIN NEON</p>
+        <div class="skin-selector" id="skinSelector">
+            <div class="skin-swatch active" data-hue="185" style="background: hsl(185, 100%, 55%); box-shadow: 0 0 12px hsl(185, 100%, 55%);"></div>
+            <div class="skin-swatch" data-hue="330" style="background: hsl(330, 100%, 55%); box-shadow: 0 0 12px hsl(330, 100%, 55%);"></div>
+            <div class="skin-swatch" data-hue="135" style="background: hsl(135, 100%, 50%); box-shadow: 0 0 12px hsl(135, 100%, 50%);"></div>
+            <div class="skin-swatch" data-hue="45" style="background: hsl(45, 100%, 55%); box-shadow: 0 0 12px hsl(45, 100%, 55%);"></div>
+            <div class="skin-swatch" data-hue="275" style="background: hsl(275, 100%, 60%); box-shadow: 0 0 12px hsl(275, 100%, 60%);"></div>
+        </div>
+
+        <button id="startBtn" class="btn btn-play">Inizia Partita</button>
+        <button id="openSettingsBtn" class="btn btn-settings">⚙️ Impostazioni</button>
+    </div>
+
+    <!-- Menu Pausa -->
+    <div id="pauseMenu" class="overlay hidden">
+        <h1 id="txt_pauseTitle">PAUSA</h1>
+        <button id="resumeBtn" class="btn btn-play">Riprendi</button>
+        <button id="pauseRestartBtn" class="btn btn-danger">Ricomincia</button>
+        <button id="pauseSettingsBtn" class="btn btn-settings">⚙️ Impostazioni</button>
+        <button id="pauseToMenuBtn" class="btn btn-secondary">Menu Principale</button>
+    </div>
+
+    <!-- Menu Impostazioni -->
+    <div id="settingsMenu" class="overlay hidden">
+        <div class="panel">
+            <h2 id="txt_settingsTitle" style="font-family: 'Orbitron'; font-size: 28px; margin-bottom: 20px; color: #fff;">IMPOSTAZIONI</h2>
+            
+            <button id="toggleSoundBtn" class="btn btn-secondary">🔊 Suono: ON</button>
+            <button id="toggleLangBtn" class="btn btn-secondary">🌐 Lingua: Italiano</button>
+            <br>
+            <button id="closeSettingsBtn" class="btn btn-play">Salva & Chiudi</button>
+        </div>
+    </div>
+
+    <!-- Menu Game Over -->
+    <div id="gameOverOverlay" class="overlay hidden">
+        <h1 id="txt_gameOverTitle" class="game-over-title">SISTEMA CRITICO</h1>
+        
+        <p style="margin-bottom: 10px;"><span id="txt_maxLength">Punteggio:</span> <span id="finalScore" class="score-highlight">0</span></p>
+        
+        <p class="highscore-text" style="margin-bottom: 30px;">
+            <span id="txt_bestScoreLabel">Miglior Punteggio:</span> <span id="bestScoreValue" style="color: #fff;">0</span>
+        </p>
+
+        <button id="restartBtn" class="btn btn-danger">Ricomincia</button>
+        <button id="toMenuBtn" class="btn btn-secondary">Menu Principale</button>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        /* =========================================
+           SISTEMA AUDIO SINTETIZZATO (Web Audio API)
+           ========================================= */
+        let isSoundOn = true;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!isSoundOn || !audioCtx) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'eat') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(750, now);
+                osc.frequency.exponentialRampToValueAtTime(1450, now + 0.09);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+                osc.start(now); osc.stop(now + 0.09);
+            } else if (type === 'kill') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+                gainNode.gain.setValueAtTime(0.35, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now); osc.stop(now + 0.35);
+            } else if (type === 'boost') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(280, now + 0.08);
+                gainNode.gain.setValueAtTime(0.08, now);
+                gainNode.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now); osc.stop(now + 0.08);
+            } else if (type === 'gameover') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(45, now + 0.8);
+                gainNode.gain.setValueAtTime(0.4, now);
+                gainNode.gain.linearRampToValueAtTime(0.01, now + 0.8);
+                osc.start(now); osc.stop(now + 0.8);
+            } else if (type === 'ui') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            }
+        }
+
+        document.querySelectorAll('.btn, #pauseBtnUI, .skin-swatch').forEach(btn => {
+            btn.addEventListener('mousedown', () => { initAudio(); playSound('ui'); });
+            btn.addEventListener('touchstart', () => { initAudio(); playSound('ui'); }, {passive: true});
+        });
+
+        /* =========================================
+           DIZIONARIO LINGUE (i18n)
+           ========================================= */
+        const i18n = {
+            it: {
+                subtitle: "Inietta il codice. Divora i dati. Diventa l'anomalia perfetta.",
+                skinLabel: "SCEGLI SKIN NEON",
+                startBtn: "Inizia Partita",
+                settingsBtn: "⚙️ Impostazioni",
+                settingsTitle: "IMPOSTAZIONI",
+                langBtn: "🌐 Lingua: Italiano",
+                soundBtnBase: "🔊 Suono: ",
+                on: "ON",
+                off: "OFF",
+                saveBtn: "Salva & Chiudi",
+                scoreLabel: "Punti: ",
+                gameOverTitle: "SISTEMA CRITICO",
+                maxLength: "Punteggio: ",
+                bestScore: "Miglior Punteggio: ",
+                restartBtn: "Ricomincia",
+                mainMenuBtn: "Menu Principale",
+                pauseTitle: "PAUSA",
+                resumeBtn: "Riprendi"
+            },
+            en: {
+                subtitle: "Inject the code. Devour the data. Become the perfect anomaly.",
+                skinLabel: "SELECT NEON SKIN",
+                startBtn: "Start Game",
+                settingsBtn: "⚙️ Settings",
+                settingsTitle: "SETTINGS",
+                langBtn: "🌐 Language: English",
+                soundBtnBase: "🔊 Sound: ",
+                on: "ON",
+                off: "OFF",
+                saveBtn: "Save & Close",
+                scoreLabel: "Score: ",
+                gameOverTitle: "SYSTEM CRITICAL",
+                maxLength: "Score: ",
+                bestScore: "Best Score: ",
+                restartBtn: "Restart",
+                mainMenuBtn: "Main Menu",
+                pauseTitle: "PAUSED",
+                resumeBtn: "Resume"
+            }
+        };
+
+        let currentLang = 'it';
+        let savedHighScore = Number(localStorage.getItem('chromacoil_highscore')) || 0;
+        let selectedPlayerHue = 185; // Ciano di default
+
+        function updateHighScoreDisplay() {
+            document.getElementById('menuBestScoreValue').innerText = Math.floor(savedHighScore);
+            document.getElementById('bestScoreValue').innerText = Math.floor(savedHighScore);
+        }
+
+        // Gestione Selettore Skin
+        document.querySelectorAll('.skin-swatch').forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                document.querySelectorAll('.skin-swatch').forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                selectedPlayerHue = Number(swatch.getAttribute('data-hue'));
+            });
+        });
+
+        /* =========================================
+           MOTORE DI GIOCO & ELEMENTI UI
+           ========================================= */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const scoreUI = document.getElementById('scoreUI');
+        const scoreValueEl = document.getElementById('scoreValue');
+        const pauseBtnUI = document.getElementById('pauseBtnUI');
+        const boostBtnUI = document.getElementById('boostBtnUI');
+        
+        const mainMenu = document.getElementById('mainMenu');
+        const settingsMenu = document.getElementById('settingsMenu');
+        const pauseMenu = document.getElementById('pauseMenu');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const finalScoreEl = document.getElementById('finalScore');
+        
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const toMenuBtn = document.getElementById('toMenuBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const pauseRestartBtn = document.getElementById('pauseRestartBtn');
+        const pauseSettingsBtn = document.getElementById('pauseSettingsBtn');
+        const pauseToMenuBtn = document.getElementById('pauseToMenuBtn');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const toggleLangBtn = document.getElementById('toggleLangBtn');
+        const toggleSoundBtn = document.getElementById('toggleSoundBtn');
+
+        let settingsContext = 'main'; 
+        let width, height;
+        let animationId;
+        let isGameOver = false;
+        let isPlaying = false;
+        let isPaused = false;
+        let frameTick = 0;
+
+        let camera = { x: 0, y: 0 };
+
+        const NUM_BOTS = 18;
+        const NUM_FOOD = 260;
+
+        let player;
+        let bots = [];
+        let foods = [];
+        let particles = [];
+        let floatingTexts = [];
+
+        const botNames = ["Glitch", "CyberX", "NullPointer", "NeonBite", "Phantom", "HexWorm", "ZeroDay", "AstroLoop", "Proxy", "ByteMe", "Vortex", "Krypton"];
+
+        function resizeCanvas() {
+            width = window.innerWidth; height = window.innerHeight;
+            canvas.width = width; canvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function updateUI() {
+            const lang = i18n[currentLang];
+            document.documentElement.lang = currentLang;
+
+            document.getElementById('txt_subtitle').innerText = lang.subtitle;
+            document.getElementById('txt_skinLabel').innerText = lang.skinLabel;
+            startBtn.innerText = lang.startBtn;
+            openSettingsBtn.innerText = lang.settingsBtn;
+
+            document.getElementById('txt_settingsTitle').innerText = lang.settingsTitle;
+            toggleLangBtn.innerText = lang.langBtn;
+            
+            let soundStatus = isSoundOn ? lang.on : lang.off;
+            toggleSoundBtn.innerText = lang.soundBtnBase + soundStatus;
+            closeSettingsBtn.innerText = lang.saveBtn;
+
+            document.getElementById('txt_scoreLabel').innerText = lang.scoreLabel;
+            document.getElementById('txt_gameOverTitle').innerText = lang.gameOverTitle;
+            document.getElementById('txt_maxLength').innerText = lang.maxLength;
+            document.getElementById('txt_bestScoreLabel').innerText = lang.bestScore;
+            document.getElementById('txt_menuBestScore').innerText = lang.bestScore;
+
+            restartBtn.innerText = lang.restartBtn;
+            toMenuBtn.innerText = lang.mainMenuBtn;
+
+            document.getElementById('txt_pauseTitle').innerText = lang.pauseTitle;
+            resumeBtn.innerText = lang.resumeBtn;
+            pauseRestartBtn.innerText = lang.restartBtn;
+            pauseSettingsBtn.innerText = lang.settingsBtn;
+            pauseToMenuBtn.innerText = lang.mainMenuBtn;
+
+            updateHighScoreDisplay();
+        }
+
+        toggleLangBtn.addEventListener('click', () => {
+            currentLang = currentLang === 'it' ? 'en' : 'it';
+            updateUI();
+        });
+
+        toggleSoundBtn.addEventListener('click', () => {
+            isSoundOn = !isSoundOn;
+            updateUI();
+        });
+
+        openSettingsBtn.addEventListener('click', () => {
+            settingsContext = 'main';
+            mainMenu.classList.add('hidden');
+            settingsMenu.classList.remove('hidden');
+        });
+
+        pauseSettingsBtn.addEventListener('click', () => {
+            settingsContext = 'pause';
+            pauseMenu.classList.add('hidden');
+            settingsMenu.classList.remove('hidden');
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsMenu.classList.add('hidden');
+            if (settingsContext === 'main') {
+                mainMenu.classList.remove('hidden');
+            } else {
+                pauseMenu.classList.remove('hidden');
+            }
+        });
+
+        pauseBtnUI.addEventListener('click', () => {
+            if (!isPlaying || isGameOver) return;
+            isPaused = true;
+            if (player) player.isBoosting = false;
+            boostBtnUI.classList.remove('boosting');
+            pauseMenu.classList.remove('hidden');
+            pauseBtnUI.classList.add('hidden');
+            boostBtnUI.classList.add('hidden');
+        });
+
+        resumeBtn.addEventListener('click', () => {
+            isPaused = false;
+            pauseMenu.classList.add('hidden');
+            pauseBtnUI.classList.remove('hidden');
+            boostBtnUI.classList.remove('hidden');
+        });
+
+        // =========================================
+        // CONTROLLO TOUCH DIRETTO & TURBO MULTI-TOUCH
+        // =========================================
+        function handleDirectSteer(clientX, clientY) {
+            if (!player || isGameOver || isPaused) return;
+            let dx = clientX - width / 2;
+            let dy = clientY - height / 2;
+            
+            // Deadzone centrale di 25px per annullare qualsiasi micro-tremolio
+            if (Math.hypot(dx, dy) > 25) {
+                player.targetAngle = Math.atan2(dy, dx);
+            }
+        }
+
+        // Usiamo targetTouches[0] così il dito sul pulsante Boost non interferisce con il dito che guida!
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.targetTouches.length > 0) {
+                handleDirectSteer(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.targetTouches.length > 0) {
+                handleDirectSteer(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('mousemove', (e) => {
+            handleDirectSteer(e.clientX, e.clientY);
+        });
+
+        // Eventi Pulsante Turbo (Mobile + PC)
+        function setBoost(state) {
+            if (!player || isGameOver || isPaused) return;
+            player.isBoosting = state;
+            if (state) boostBtnUI.classList.add('boosting');
+            else boostBtnUI.classList.remove('boosting');
+        }
+
+        boostBtnUI.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); setBoost(true); }, { passive: false });
+        boostBtnUI.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); setBoost(false); }, { passive: false });
+        boostBtnUI.addEventListener('mousedown', (e) => { e.stopPropagation(); setBoost(true); });
+        window.addEventListener('mouseup', () => setBoost(false));
+        window.addEventListener('keydown', (e) => { if (e.code === 'Space') setBoost(true); });
+        window.addEventListener('keyup', (e) => { if (e.code === 'Space') setBoost(false); });
+
+        // =========================================
+        // PARTICELLE ED EFFETTI VISIVI
+        // =========================================
+        function spawnParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 4 + 1.5;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    alpha: 1,
+                    color: color,
+                    radius: Math.random() * 3 + 2
+                });
+            }
+        }
+
+        function spawnFloatingText(x, y, text, color) {
+            floatingTexts.push({
+                x, y: y - 10,
+                text, color,
+                alpha: 1,
+                vy: -1.5
+            });
+        }
+
+        // =========================================
+        // ENTITÀ E FISICA AVANZATA
+        // =========================================
+        function createSnake(x, y, isBot, name, customHue = null) {
+            let segments = [];
+            for (let i = 0; i < 15; i++) segments.push({ x, y });
+            return {
+                isBot, name, segments,
+                angle: Math.random() * Math.PI * 2,
+                targetAngle: Math.random() * Math.PI * 2,
+                baseSpeed: 4.2,
+                speed: 4.2,
+                baseRadius: 13,
+                currentRadius: 13,
+                score: 0,
+                isBoosting: false,
+                colorHue: customHue !== null ? customHue : Math.floor(Math.random() * 360)
+            };
+        }
+
+        function startGame() {
+            initAudio();
+            resizeCanvas(); isGameOver = false; isPlaying = true; isPaused = false;
+            
+            mainMenu.classList.add('hidden'); 
+            gameOverOverlay.classList.add('hidden');
+            pauseMenu.classList.add('hidden');
+            
+            scoreUI.classList.remove('hidden'); 
+            pauseBtnUI.classList.remove('hidden');
+            boostBtnUI.classList.remove('hidden');
+            boostBtnUI.classList.remove('boosting');
+            
+            let playerName = currentLang === 'it' ? "Tu" : "You";
+            player = createSnake(0, 0, false, playerName, selectedPlayerHue);
+            camera.x = 0;
+            camera.y = 0;
+            
+            foods = []; bots = []; particles = []; floatingTexts = [];
+            for (let i = 0; i < NUM_FOOD; i++) spawnFood(false, player.segments[0].x, player.segments[0].y, true);
+            for (let i = 0; i < NUM_BOTS; i++) spawnBotNearPlayer();
+
+            cancelAnimationFrame(animationId);
+            gameLoop();
+        }
+
+        function spawnFood(isPremium, originX, originY, scatterWide = false, customVal = null, customHue = null) {
+            let maxDist = scatterWide ? 2000 : (isPremium ? 15 : 800);
+            let angle = Math.random() * Math.PI * 2;
+            let distance = Math.random() * maxDist;
+            let hue = customHue !== null ? customHue : Math.floor(Math.random() * 360);
+            foods.push({
+                x: originX + Math.cos(angle) * distance,
+                y: originY + Math.sin(angle) * distance,
+                radius: isPremium ? Math.random() * 4 + 14 : Math.random() * 3 + 8,
+                color: `hsl(${hue}, 100%, 65%)`,
+                value: customVal !== null ? customVal : (isPremium ? 35 : 10),
+                pulseOffset: Math.random() * Math.PI * 2
+            });
+        }
+
+        function spawnBotNearPlayer() {
+            let angle = Math.random() * Math.PI * 2;
+            let distance = Math.random() * 1200 + 700;
+            let bot = createSnake(
+                player.segments[0].x + Math.cos(angle) * distance,
+                player.segments[0].y + Math.sin(angle) * distance,
+                true,
+                botNames[Math.floor(Math.random() * botNames.length)]
+            );
+            // Dai ai bot un punteggio iniziale variabile per rendere l'arena più varia
+            bot.score = Math.floor(Math.random() * 120);
+            bots.push(bot);
+        }
+
+        function explodeSnakeIntoFood(snakeObj) {
+            playSound('kill');
+            spawnParticles(snakeObj.segments[0].x, snakeObj.segments[0].y, `hsl(${snakeObj.colorHue}, 100%, 65%)`, 22);
+            snakeObj.segments.forEach((seg, index) => {
+                if (index % 2 === 0) {
+                    spawnFood(true, seg.x, seg.y, false, 30, snakeObj.colorHue);
+                }
+            });
+        }
+
+        function updateSnakePhysics(s) {
+            let head = s.segments[0];
+
+            // Gestione Velocità e Consumo Turbo (Boost)
+            if (s.isBoosting && s.score >= 20) {
+                s.speed = s.baseSpeed * 1.75;
+                s.score -= 0.35; // Consuma energia gradualmente
+                
+                // Rilascia scia energetica dalla coda e particelle
+                if (frameTick % 7 === 0) {
+                    let tail = s.segments[s.segments.length - 1];
+                    spawnFood(false, tail.x, tail.y, false, 5, s.colorHue);
+                    if (!s.isBot) playSound('boost');
+                }
+            } else {
+                s.speed = s.baseSpeed;
+                if (!s.isBot && s.score < 20) boostBtnUI.classList.remove('boosting');
+            }
+
+            // Sterzata fluida
+            let angleDiff = s.targetAngle - s.angle;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            s.angle += angleDiff * 0.13; 
+
+            head.x += Math.cos(s.angle) * s.speed;
+            head.y += Math.sin(s.angle) * s.speed;
+
+            // Calcolo dimensione e lunghezza dinamica basata sul punteggio attuale
+            s.currentRadius = Math.min(s.baseRadius + (s.score * 0.004), 38);
+            let targetSegments = 15 + Math.floor(s.score / 10);
+            
+            while (s.segments.length < targetSegments) {
+                s.segments.push({ ...s.segments[s.segments.length - 1] });
+            }
+            while (s.segments.length > targetSegments && s.segments.length > 12) {
+                s.segments.pop();
+            }
+
+            // Movimento cinematica segmenti
+            let spacing = s.currentRadius * 0.58; 
+            for (let i = 1; i < s.segments.length; i++) {
+                let current = s.segments[i], previous = s.segments[i - 1];
+                let dx = previous.x - current.x, dy = previous.y - current.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist > spacing) {
+                    let moveAngle = Math.atan2(dy, dx);
+                    current.x = previous.x - Math.cos(moveAngle) * spacing;
+                    current.y = previous.y - Math.sin(moveAngle) * spacing;
+                }
+            }
+
+            // Calamita Cibo & Nutrizione
+            let magnetRange = s.currentRadius + 48;
+            for (let i = foods.length - 1; i >= 0; i--) {
+                let f = foods[i];
+                let dist = Math.hypot(head.x - f.x, head.y - f.y);
+                
+                // Effetto Calamita: attira il cibo vicino verso la bocca
+                if (dist < magnetRange) {
+                    f.x += (head.x - f.x) * 0.22;
+                    f.y += (head.y - f.y) * 0.22;
+                }
+
+                // Raccolta effettiva
+                if (dist < s.currentRadius + f.radius * 0.8) {
+                    s.score += f.value;
+                    
+                    if (!s.isBot) {
+                        playSound('eat');
+                        spawnParticles(f.x, f.y, f.color, 5);
+                        if (f.value >= 25) {
+                            spawnFloatingText(head.x, head.y, `+${f.value}`, f.color);
+                        }
+                        spawnFood(false, player.segments[0].x, player.segments[0].y, true);
+                    }
+                    foods.splice(i, 1);
+                }
+            }
+        }
+
+        // IA Evoluta per i Bot (Ricerca cibo + Schivata Ostacoli)
+        function updateBotAI(bot) {
+            let bHead = bot.segments[0];
+            let dangerDetected = false;
+
+            // 1. Radar anticollisione: controlla se c'è un altro serpente subito davanti
+            let allSnakes = [player, ...bots];
+            for (let other of allSnakes) {
+                if (other === bot) continue;
+                if (Math.hypot(bHead.x - other.segments[0].x, bHead.y - other.segments[0].y) > 450) continue;
+
+                for (let j = 0; j < other.segments.length; j += 2) {
+                    let seg = other.segments[j];
+                    let dist = Math.hypot(bHead.x - seg.x, bHead.y - seg.y);
+                    if (dist < 130 + bot.currentRadius) {
+                        // Sterza nella direzione opposta al pericolo
+                        let angleToDanger = Math.atan2(seg.y - bHead.y, seg.x - bHead.x);
+                        bot.targetAngle = angleToDanger + Math.PI;
+                        bot.isBoosting = bot.score > 60 && Math.random() < 0.3;
+                        dangerDetected = true;
+                        break;
+                    }
+                }
+                if (dangerDetected) break;
+            }
+
+            // 2. Se non c'è pericolo immediato, cerca il cibo migliore
+            if (!dangerDetected) {
+                bot.isBoosting = false;
+                let closestFood = null, minDist = 280;
+                for (let f of foods) {
+                    let d = Math.hypot(f.x - bHead.x, f.y - bHead.y);
+                    if (d < minDist) { minDist = d; closestFood = f; }
+                }
+                if (closestFood) {
+                    bot.targetAngle = Math.atan2(closestFood.y - bHead.y, closestFood.x - bHead.x);
+                    if (closestFood.value >= 30 && bot.score > 50) bot.isBoosting = true;
+                } else if (Math.random() < 0.02) {
+                    bot.targetAngle += (Math.random() - 0.5) * 1.5;
+                }
+            }
+        }
+
+        function processCombatAndMap() {
+            let pHead = player.segments[0];
+            for (let i = foods.length - 1; i >= 0; i--) {
+                if (Math.hypot(foods[i].x - pHead.x, foods[i].y - pHead.y) > 2200) {
+                    foods.splice(i, 1);
+                    spawnFood(false, pHead.x, pHead.y, true);
+                }
+            }
+            for (let i = bots.length - 1; i >= 0; i--) {
+                if (Math.hypot(bots[i].segments[0].x - pHead.x, bots[i].segments[0].y - pHead.y) > 2600) {
+                    bots.splice(i, 1);
+                    spawnBotNearPlayer();
+                }
+            }
+
+            let allSnakes = [player, ...bots];
+            allSnakes.forEach((snakeA) => {
+                if (isGameOver && !snakeA.isBot) return;
+                let headA = snakeA.segments[0];
+                allSnakes.forEach((snakeB) => {
+                    if (snakeA === snakeB || Math.hypot(headA.x - snakeB.segments[0].x, headA.y - snakeB.segments[0].y) > 650) return;
+                    for (let j = 0; j < snakeB.segments.length; j++) {
+                        if (Math.hypot(headA.x - snakeB.segments[j].x, headA.y - snakeB.segments[j].y) < (snakeA.currentRadius + snakeB.currentRadius) * 0.74) {
+                            explodeSnakeIntoFood(snakeA);
+                            if (!snakeA.isBot) {
+                                triggerGameOver();
+                            } else {
+                                if (!snakeB.isBot) {
+                                    spawnFloatingText(headA.x, headA.y, "ELIMINATO!", "#00f2fe");
+                                }
+                                let idx = bots.indexOf(snakeA);
+                                if (idx > -1) { bots.splice(idx, 1); spawnBotNearPlayer(); }
+                            }
+                            return; 
+                        }
+                    }
+                });
+            });
+        }
+
+        function update() {
+            if (isGameOver) return;
+            frameTick++;
+
+            updateSnakePhysics(player);
+            
+            // Telecamera Ammortizzata (Zero effetto terremoto)
+            camera.x += (player.segments[0].x - camera.x) * 0.14;
+            camera.y += (player.segments[0].y - camera.y) * 0.14;
+
+            bots.forEach(bot => {
+                updateBotAI(bot);
+                updateSnakePhysics(bot);
+            });
+
+            // Aggiorna Particelle
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            // Aggiorna Testi Fluttuanti
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                let ft = floatingTexts[i];
+                ft.y += ft.vy;
+                ft.alpha -= 0.025;
+                if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+            }
+
+            processCombatAndMap();
+        }
+
+        function triggerGameOver() {
+            isGameOver = true; 
+            player.isBoosting = false;
+            playSound('gameover');
+            
+            let finalPoints = Math.floor(player.score);
+            if (finalPoints > savedHighScore) {
+                savedHighScore = finalPoints;
+                localStorage.setItem('chromacoil_highscore', savedHighScore);
+            }
+            updateHighScoreDisplay();
+
+            finalScoreEl.innerText = finalPoints;
+            gameOverOverlay.classList.remove('hidden'); 
+            pauseBtnUI.classList.add('hidden');
+            boostBtnUI.classList.add('hidden');
+        }
+
+        // =========================================
+        // ENGINE GRAFICO: EFFETTI NEON & ANATOMIA
+        // =========================================
+        function draw() {
+            ctx.fillStyle = "#030306";
+            ctx.fillRect(0, 0, width, height);
+
+            let camX = camera.x - width / 2;
+            let camY = camera.y - height / 2;
+
+            ctx.save(); ctx.translate(-camX, -camY);
+
+            // Griglia Cyber
+            ctx.strokeStyle = "rgba(0, 242, 254, 0.06)";
+            ctx.lineWidth = 2;
+            const gridSize = 80;
+            let startX = Math.floor(camX / gridSize) * gridSize, endX = startX + width + gridSize;
+            let startY = Math.floor(camY / gridSize) * gridSize, endY = startY + height + gridSize;
+            ctx.beginPath();
+            for (let x = startX; x <= endX; x += gridSize) { ctx.moveTo(x, startY); ctx.lineTo(x, endY); }
+            for (let y = startY; y <= endY; y += gridSize) { ctx.moveTo(startX, y); ctx.lineTo(endX, y); }
+            ctx.stroke();
+
+            // Disegna Energie con lieve pulsazione
+            foods.forEach(f => {
+                if (f.x > camX - 50 && f.x < camX + width + 50 && f.y > camY - 50 && f.y < camY + height + 50) {
+                    let pulse = Math.sin(frameTick * 0.08 + f.pulseOffset) * 1.5;
+                    ctx.beginPath();
+                    ctx.arc(f.x, f.y, Math.max(2, f.radius + pulse), 0, Math.PI * 2);
+                    ctx.fillStyle = f.color;
+                    ctx.shadowBlur = 15; ctx.shadowColor = f.color;
+                    ctx.fill(); ctx.shadowBlur = 0;
+                }
+            });
+
+            // Disegna Particelle
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            });
+
+            // Disegna Serpenti
+            bots.forEach(b => drawSnakeEntity(b, camX, camY));
+            if (!isGameOver) drawSnakeEntity(player, camX, camY);
+
+            // Disegna Testi Fluttuanti
+            floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ft.alpha);
+                ctx.font = "bold 20px 'Orbitron', sans-serif";
+                ctx.fillStyle = ft.color;
+                ctx.textAlign = "center";
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            });
+
+            ctx.restore();
+
+            scoreValueEl.innerText = Math.floor(player.score);
+            drawProximityRadar();
+        }
+
+        function drawSnakeEntity(s, camX, camY) {
+            let h = s.segments[0];
+            if (h.x < camX - 350 || h.x > camX + width + 350 || h.y < camY - 350 || h.y > camY + height + 350) return;
+
+            let isTurboActive = s.isBoosting && s.score >= 20;
+
+            for (let i = s.segments.length - 1; i >= 0; i--) {
+                let seg = s.segments[i];
+                
+                // Coda affusolata sugli ultimi 4 segmenti
+                let segRadius = s.currentRadius;
+                if (i > s.segments.length - 5) {
+                    let tailFactor = (s.segments.length - i) / 5;
+                    segRadius = Math.max(4, s.currentRadius * (0.4 + tailFactor * 0.6));
+                }
+
+                ctx.beginPath(); ctx.arc(seg.x, seg.y, segRadius, 0, Math.PI * 2);
+
+                ctx.fillStyle = i === 0 
+                    ? `hsl(${s.colorHue}, 100%, 75%)` 
+                    : `hsl(${(s.colorHue + (i % 2 === 0 ? 0 : 20)) % 360}, 90%, ${isTurboActive ? 65 : 52}%)`; 
+
+                if (i === 0 || (isTurboActive && i % 3 === 0)) {
+                    ctx.shadowBlur = isTurboActive ? 28 : 20;
+                    ctx.shadowColor = `hsl(${s.colorHue}, 100%, 60%)`;
+                }
+                
+                ctx.fill(); ctx.shadowBlur = 0;
+                ctx.strokeStyle = "rgba(0, 0, 0, 0.35)"; ctx.lineWidth = 1; ctx.stroke();
+
+                if (i === 0) {
+                    let eD = s.currentRadius * 0.5, eR = s.currentRadius * 0.25, pR = eR * 0.6;
+                    let lX = seg.x + Math.cos(s.angle - 0.6)*eD, lY = seg.y + Math.sin(s.angle - 0.6)*eD;
+                    let rX = seg.x + Math.cos(s.angle + 0.6)*eD, rY = seg.y + Math.sin(s.angle + 0.6)*eD;
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.beginPath(); ctx.arc(lX, lY, eR, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(rX, rY, eR, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = "#000000";
+                    ctx.beginPath(); ctx.arc(lX, lY, pR, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(rX, rY, pR, 0, Math.PI*2); ctx.fill();
+
+                    ctx.fillStyle = "rgba(0, 242, 254, 0.85)";
+                    ctx.font = "bold 13px 'Rajdhani', sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.fillText(s.name, seg.x, seg.y - s.currentRadius - 10);
+                }
+            }
+        }
+
+        function drawProximityRadar() {
+            const radarRadius = 55, margin = 20;
+            const rx = width - radarRadius - margin; 
+            const ry = height - radarRadius - margin;
+
+            ctx.fillStyle = "rgba(10, 10, 18, 0.7)";
+            ctx.beginPath(); ctx.arc(rx, ry, radarRadius, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = "rgba(0, 242, 254, 0.3)"; ctx.lineWidth = 2; ctx.stroke();
+
+            let radarScale = radarRadius / 1800;
+            ctx.fillStyle = "#ff0844";
+            bots.forEach(b => {
+                let dx = b.segments[0].x - player.segments[0].x, dy = b.segments[0].y - player.segments[0].y;
+                if (Math.hypot(dx, dy) < 1800) ctx.fillRect(rx + dx * radarScale - 2, ry + dy * radarScale - 2, 4, 4);
+            });
+
+            if (!isGameOver) {
+                ctx.fillStyle = "#00f2fe"; ctx.beginPath(); ctx.arc(rx, ry, 3.5, 0, Math.PI*2); ctx.fill();
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+            if (!isPaused) update(); 
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        const returnToMenuAction = () => {
+            isPlaying = false; ctx.clearRect(0,0,width,height);
+            gameOverOverlay.classList.add('hidden'); 
+            pauseMenu.classList.add('hidden');
+            scoreUI.classList.add('hidden'); 
+            pauseBtnUI.classList.add('hidden');
+            boostBtnUI.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        };
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        pauseRestartBtn.addEventListener('click', startGame);
+        
+        toMenuBtn.addEventListener('click', returnToMenuAction);
+        pauseToMenuBtn.addEventListener('click', returnToMenuAction);
+
+        updateUI();
+        resizeCanvas();
+    </script>
+</body>
+</html>
