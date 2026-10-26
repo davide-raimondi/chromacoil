@@ -1,53 +1,40 @@
-# ⚡ CHROMACOIL 2.0
+# 🐍 ChromaCoil
 
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-00f2fe?style=for-the-badge)
-![Mobile Friendly](https://img.shields.io/badge/Mobile-Optimized-ff0844?style=for-the-badge)
+> Gioco arcade arena ad alta intensità con serpenti energetici, power-up olografici e boss battle, sviluppato in architettura single-file.
 
-> *"Inietta il codice. Divora i dati. Diventa l'anomalia perfetta."*  
-> *"Inject the code. Devour the data. Become the perfect anomaly."*
+[![Gioca Ora](https://img.shields.io/badge/GIOCA%20ORA-Live%20su%20GitHub%20Pages-success?style=for-the-badge&logo=github)](https://davide-raimondi.github.io/chromacoil/)
 
-**ChromaCoil** è un videogioco arcade di sopravvivenza in stile *Slither.io* con estetica Cyberpunk/Synthwave, sviluppato interamente in un **singolo file `index.html`** senza alcuna libreria o risorsa esterna. Progettato e ottimizzato per girare a 60 FPS su smartphone (anche direttamente da editor mobile come **A-Code**) e browser desktop.
+**ChromaCoil** reinterpreta i classici giochi arena in chiave sci-fi: controlla una scia energetica, assorbi energia per crescere, raccogli potenziamenti olografici ed elimina gli avversari in un'arena dinamica ottimizzata per schermi touch.
 
-### 🎮 [Gioca alla Live Demo (GitHub Pages)](https://davide23567.github.io/chromacoil/)
+## ✨ Funzionalità Principali
 
+- ⚡ **Combattimento in Arena**: Muoviti con fluidità per tagliare la strada agli avversari, assorbire la loro energia e scalare la classifica.
+- 🔮 **Power-Up Olografici & Boss Battle**: Raccogli abilità speciali nell'arena e affronta impegnative battaglie contro i boss.
+- 🎵 **Audio Procedurale & Effetti Neon**: Feedback sonori generati via codice e scie luminose dinamiche.
+- 🚀 **Single-File Architecture**: Intero gioco racchiuso in un singolo file HTML/CSS/JS leggero e immediato.
 
----
+## 🛠 Tecnologie Utilizzate
 
-## 🚀 Caratteristiche Principali
+- **HTML5 Canvas** per il rendering fluido delle scie energetiche e dell'arena.
+- **CSS3** per l'interfaccia utente glassmorphic e le schermate di menu.
+- **Vanilla JavaScript (ES6+)** per l'intelligenza artificiale dei nemici, la fisica delle collisioni e la **Web Audio API**.
 
-* **🌐 Arena Infinita Procedurale:** Nessun muro perimetrale. La griglia olografica, i frammenti di dati (cibo) e i bot si generano e riposizionano dinamicamente attorno al giocatore.
-* **📱 Controllo Direct-Touch & Multi-Touch:** Sistema di guida fluido a 360° che segue il dito sullo schermo (con *deadzone* anti-tremolio e *Smooth Camera* ammortizzata), affiancato da un pulsante **⚡ Turbo** indipendente utilizzabile contemporaneamente con il secondo pollice.
-* **🧠 Intelligenza Artificiale Predittiva:** 18 Bot avversari dotati di radar anticollisione (sterzano d'emergenza per evitare il tuo corpo), ricerca attiva del cibo e utilizzo strategico del Turbo.
-* **🔊 Sintetizzatore Audio Integrato (Web Audio API):** Effetti sonori retro-synth generati matematicamente in tempo reale dal codice. Nessun file `.mp3` o `.wav` esterno richiesto.
-* **🎨 Personalizzazione & Glassmorphism UI:** Interfaccia utente moderna con effetto vetro satinato (`backdrop-filter`), selettore di **5 Skin al Neon**, particelle esplosive, testi fluttuanti e coda anatomica affusolata.
-* **🌍 Multilingua (i18n) & Salvataggio Dati:** Traduzione istantanea **Italiano / Inglese** dal menu impostazioni e salvataggio automatico del Miglior Punteggio tramite `localStorage`.
+## 🕹 Come Giocare
 
----
+Gioca subito online dal tuo browser mobile o desktop:
 
-## 🕹️ Comandi di Gioco
+👉 **[Gioca ora a ChromaCoil su GitHub Pages](https://davide-raimondi.github.io/chromacoil/)**
 
-| Piattaforma | Movimento (Sterzata 360°) | Turbo (Boost) | Pausa |
-| :--- | :--- | :--- | :--- |
-| **📱 Mobile / Touch** | Trascina il dito in qualsiasi punto dello schermo | Tieni premuto il tasto **⚡** in basso a sinistra | Tocca **⏸️** in alto a destra |
-| **💻 PC / Desktop** | Muovi il cursore del mouse | Tieni premuta la **Barra Spaziatrice** (o clicca su **⚡**) | Clicca su **⏸️** in alto a destra |
+### Esecuzione in Locale
+1. Clona il repository:
+```bash
+git clone [https://github.com/davide-raimondi/chromacoil.git](https://github.com/davide-raimondi/chromacoil.git)
+```
+2. Apri il file `index.html` in qualsiasi browser moderno.
 
-> **Nota sul Turbo:** Attivare il potenziamento di velocità raddoppia l'andatura ma consuma gradualmente i tuoi punti, rilasciando una scia energetica dalla coda (richiede almeno 20 punti).
+## 🤝 Crediti e Contatti
 
----
-
-## 🛠️ Come Avviare il Gioco
-
-Essendo costruito con architettura *Single-File*, non serve installare Node.js, database o compilatori:
-
-### 1. Da Smartphone (con A-Code o browser mobile)
-1. Scarica il file `index.html`.
-2. Aprilo dentro **A-Code** (o qualsiasi editor di codice Android/iOS) e premi il tasto **Play ▶** in alto a destra.
-
-### 2. Da PC
-1. Clona questo repository:
-   ```bash
-   git clone [https://github.com/Davide23567/chromacoil.git](https://github.com/Davide23567/chromacoil.git)
-   
+Sviluppato da **Davide Raimondi**.
+- **GitHub**: [@davide-raimondi](https://github.com/davide-raimondi)
+- **Instagram**: [@davide.raimondi94](https://www.instagram.com/davide.raimondi94)
+- 
